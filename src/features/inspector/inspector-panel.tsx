@@ -8,6 +8,7 @@ import { resolveRenderedPorts } from '../ports/model/resolveRenderedPorts';
 import type { SchemaPort } from '../ports/model/types';
 import { useBlockDetailsQuery } from './hooks/use-block-details-query';
 import { useRuntimeBlockSettings } from './hooks/use-runtime-block-settings';
+import { useSchedulersQuery } from './hooks/use-schedulers-query';
 import {
   resolveRuntimeSettingsAvailability,
   toRuntimeSettingsErrorMessage,
@@ -628,6 +629,7 @@ export function InspectorPanel() {
 
   const documentName = useEditorStore((state) => state.documentName);
   const documentDescription = useEditorStore((state) => state.documentDescription);
+  const schedulerId = useEditorStore((state) => state.schedulerId);
   const studioPanels = useEditorStore((state) => state.studioPanels);
   const studioVariables = useEditorStore((state) => state.studioVariables);
   const studioLayout = useEditorStore((state) => state.studioLayout);
@@ -635,7 +637,9 @@ export function InspectorPanel() {
   const application = useEditorStore((state) => state.application);
   const nodes = useEditorStore((state) => state.nodes);
   const edges = useEditorStore((state) => state.edges);
+  const setDocumentSchedulerId = useEditorStore((state) => state.setDocumentSchedulerId);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const schedulersQuery = useSchedulersQuery(activeTab === 'graph');
   const uniqueBlockTypes = useMemo(() => Array.from(new Set(nodes.map((node) => node.blockTypeId))), [nodes]);
   const blockDetailQueries = useQueries({
     queries: uniqueBlockTypes.map((blockTypeId) => ({
@@ -660,6 +664,7 @@ export function InspectorPanel() {
       metadata: {
         name: documentName,
         description: documentDescription,
+        schedulerId,
         studioPanels,
         studioVariables,
         studioLayout,
@@ -675,6 +680,7 @@ export function InspectorPanel() {
       documentName,
       edges,
       nodes,
+      schedulerId,
       studioLayout,
       studioPanels,
       studioPlotPalettes,
@@ -687,8 +693,15 @@ export function InspectorPanel() {
     [blockDetailsByType, currentSnapshot],
   );
 
-  const runtimeView = activeGraphTabId ? getTabRuntimeView(activeGraphTabId, currentSubmissionContent) : null;
+  const runtimeView = activeGraphTabId ? getTabRuntimeView(activeGraphTabId, currentSubmissionContent, schedulerId) : null;
   const canExportCurrentGraph = canDownloadCurrentGraph(activeGraphTab);
+  const schedulerOptions = useMemo(() => {
+    const ids = (schedulersQuery.data ?? []).map((entry) => entry.id);
+    if (schedulerId && !ids.includes(schedulerId)) {
+      return [schedulerId, ...ids];
+    }
+    return ids;
+  }, [schedulerId, schedulersQuery.data]);
 
   const handleDownloadGrc = () => {
     const result = downloadCurrentGraphAsGr4c({
@@ -781,6 +794,28 @@ export function InspectorPanel() {
                   <SummaryLabel>Run Intent</SummaryLabel>
                   <SummaryValue>{runIntentLabel(runtimeView?.runIntent)}</SummaryValue>
                 </div>
+                <div>
+                  <SummaryLabel>Scheduler</SummaryLabel>
+                  <select
+                    value={schedulerId ?? ''}
+                    onChange={(event) => {
+                      const nextValue = event.target.value || undefined;
+                      setDocumentSchedulerId(nextValue);
+                    }}
+                    disabled={schedulersQuery.isPending || schedulersQuery.isError}
+                    className="w-full rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-100 outline-none focus:border-cyan-500 disabled:opacity-60"
+                  >
+                    <option value="">Default scheduler</option>
+                    {schedulerOptions.map((id) => (
+                      <option key={id} value={id}>
+                        {id}
+                      </option>
+                    ))}
+                  </select>
+                  {schedulersQuery.isPending && <SummaryValue>Loading schedulers...</SummaryValue>}
+                  {schedulersQuery.isError && <SummaryValue>Failed to load schedulers.</SummaryValue>}
+                  <p className="mt-1 text-[11px] text-slate-500">Used when creating the next session.</p>
+                </div>
               </div>
               <div className="pt-2">
                 <button
@@ -814,6 +849,10 @@ export function InspectorPanel() {
                 <div>
                   <SummaryLabel>Session Name</SummaryLabel>
                   <SummaryValue>{runtimeContext?.session?.name ?? 'N/A'}</SummaryValue>
+                </div>
+                <div>
+                  <SummaryLabel>Scheduler</SummaryLabel>
+                  <SummaryValue>{runtimeContext?.session?.schedulerId ?? 'default'}</SummaryValue>
                 </div>
                 <div>
                   <SummaryLabel>Session Created</SummaryLabel>

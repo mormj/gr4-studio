@@ -195,6 +195,7 @@ export const graphDocumentSchema = z.object({
   metadata: z.object({
     name: z.string().min(1),
     description: z.string().optional(),
+    schedulerId: z.string().min(1).optional(),
     studio: studioWorkspaceMetadataSchema.optional(),
     application: applicationSpecSchema.optional(),
   }),

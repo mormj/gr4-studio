@@ -3,14 +3,15 @@ import type { ApplicationSpec, StudioLayoutSpec, StudioPanelSpec, StudioPlotPale
 import type { GraphDocument } from './types';
 
 type EditorGraphReplacement = {
-    metadata: {
-      name: string;
-      description?: string;
-      studioPanels?: StudioPanelSpec[];
-      studioVariables?: StudioVariable[];
-      studioLayout?: StudioLayoutSpec;
-      studioPlotPalettes?: StudioPlotPaletteSpec[];
-      application?: ApplicationSpec;
+  metadata: {
+    name: string;
+    description?: string;
+    schedulerId?: string;
+    studioPanels?: StudioPanelSpec[];
+    studioVariables?: StudioVariable[];
+    studioLayout?: StudioLayoutSpec;
+    studioPlotPalettes?: StudioPlotPaletteSpec[];
+    application?: ApplicationSpec;
   };
   nodes: EditorGraphNode[];
   edges: EditorGraphEdge[];
@@ -21,6 +22,7 @@ export function editorGraphFromDocument(document: GraphDocument): EditorGraphRep
     metadata: {
       name: document.metadata.name,
       description: document.metadata.description,
+      schedulerId: document.metadata.schedulerId,
       studioPanels: document.metadata.studio?.panels,
       studioVariables: document.metadata.studio?.variables,
       studioLayout: document.metadata.studio?.layout,

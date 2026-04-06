@@ -168,6 +168,7 @@ export function StudioPage() {
   const studioLayout = useEditorStore((state) => state.studioLayout);
   const studioPlotPalettes = useEditorStore((state) => state.studioPlotPalettes);
   const application = useEditorStore((state) => state.application);
+  const schedulerId = useEditorStore((state) => state.schedulerId);
   const addVariable = useEditorStore((state) => state.addVariable);
   const updateVariable = useEditorStore((state) => state.updateVariable);
   const removeVariable = useEditorStore((state) => state.removeVariable);
@@ -222,6 +223,7 @@ export function StudioPage() {
       metadata: {
         name: documentName,
         description: documentDescription,
+        schedulerId,
         studioPanels,
         studioVariables,
         studioLayout,
@@ -231,7 +233,7 @@ export function StudioPage() {
       nodes,
       edges,
     }),
-    [application, documentDescription, documentName, edges, nodes, studioLayout, studioPanels, studioPlotPalettes, studioVariables],
+    [application, documentDescription, documentName, edges, nodes, schedulerId, studioLayout, studioPanels, studioPlotPalettes, studioVariables],
   );
   const serializedSnapshot = useMemo(() => serializeEditorSnapshot(currentSnapshot), [currentSnapshot]);
   const activeTabSerializedSnapshot = useMemo(
@@ -371,7 +373,7 @@ export function StudioPage() {
     [studioPlotPalettes],
   );
   const activeCenterView: CenterViewMode = activeTabId ? centerViewByTabId[activeTabId] ?? 'graph' : 'graph';
-  const runtimeView = activeTabId ? getTabRuntimeView(activeTabId, currentSubmissionContent) : null;
+  const runtimeView = activeTabId ? getTabRuntimeView(activeTabId, currentSubmissionContent, schedulerId) : null;
   const activeRuntimeContext = activeTabId ? runtimeContextsByTabId[activeTabId] : null;
   const controlWidgetRuntime =
     activeRuntimeContext && runtimeView

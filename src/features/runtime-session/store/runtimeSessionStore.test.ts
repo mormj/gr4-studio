@@ -21,11 +21,14 @@ import {
 } from '../../../lib/api/sessionsApi';
 import { useRuntimeSessionStore } from './runtimeSessionStore';
 
-function graphDocument(name: string) {
+function graphDocument(name: string, schedulerId?: string) {
   return {
     format: 'gr4-studio.graph' as const,
     version: 1 as const,
-    metadata: { name },
+    metadata: {
+      name,
+      schedulerId,
+    },
     graph: {
       nodes: [],
       edges: [],
@@ -114,6 +117,73 @@ describe('runtimeSessionStore (sessions-only model)', () => {
 
     const view = useRuntimeSessionStore.getState().getTabRuntimeView('tab-1', 'irrelevant-content');
     expect(view.executionState).toBe('running');
+  });
+
+  it('runTab passes scheduler id through to createSession and treats scheduler drift as a new submission', async () => {
+    vi.mocked(createSession)
+      .mockResolvedValueOnce({
+        id: 'session-1',
+        name: 'demo',
+        state: 'stopped',
+        createdAt: '2026-03-20T00:00:00.000Z',
+        updatedAt: '2026-03-20T00:00:00.000Z',
+        lastError: null,
+      })
+      .mockResolvedValueOnce({
+        id: 'session-2',
+        name: 'demo',
+        state: 'stopped',
+        createdAt: '2026-03-20T00:00:02.000Z',
+        updatedAt: '2026-03-20T00:00:02.000Z',
+        lastError: null,
+      });
+    vi.mocked(startSession)
+      .mockResolvedValueOnce({
+        id: 'session-1',
+        name: 'demo',
+        state: 'running',
+        createdAt: '2026-03-20T00:00:00.000Z',
+        updatedAt: '2026-03-20T00:00:01.000Z',
+        lastError: null,
+      })
+      .mockResolvedValueOnce({
+        id: 'session-2',
+        name: 'demo',
+        state: 'running',
+        createdAt: '2026-03-20T00:00:02.000Z',
+        updatedAt: '2026-03-20T00:00:03.000Z',
+        lastError: null,
+      });
+    vi.mocked(getSession)
+      .mockResolvedValueOnce({
+        id: 'session-1',
+        name: 'demo',
+        state: 'running',
+        createdAt: '2026-03-20T00:00:00.000Z',
+        updatedAt: '2026-03-20T00:00:01.000Z',
+        lastError: null,
+      })
+      .mockResolvedValueOnce({
+        id: 'session-2',
+        name: 'demo',
+        state: 'running',
+        createdAt: '2026-03-20T00:00:02.000Z',
+        updatedAt: '2026-03-20T00:00:03.000Z',
+        lastError: null,
+      });
+
+    await useRuntimeSessionStore.getState().runTab('tab-1', graphDocument('same graph', 'gr::scheduler::SimpleSingle'));
+    await useRuntimeSessionStore.getState().runTab('tab-1', graphDocument('same graph', 'gr::scheduler::SimpleMulti'));
+
+    expect(vi.mocked(createSession)).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ scheduler_id: 'gr::scheduler::SimpleSingle' }),
+    );
+    expect(vi.mocked(createSession)).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ scheduler_id: 'gr::scheduler::SimpleMulti' }),
+    );
+    expect(useRuntimeSessionStore.getState().contextsByTabId['tab-1'].sessionId).toBe('session-2');
   });
 
   it('rerun unchanged graph reuses linked session and skips createSession', async () => {

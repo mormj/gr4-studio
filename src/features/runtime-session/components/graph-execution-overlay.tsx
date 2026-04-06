@@ -7,6 +7,7 @@ type GraphExecutionOverlayProps = {
   tabId: string;
   onRun: () => void;
   currentSubmissionContent: string;
+  currentSchedulerId?: string | null;
 };
 
 function shortId(id: string | null): string {
@@ -87,7 +88,7 @@ function executionHint(params: {
   return 'Idle.';
 }
 
-export function GraphExecutionOverlay({ tabId, onRun, currentSubmissionContent }: GraphExecutionOverlayProps) {
+export function GraphExecutionOverlay({ tabId, onRun, currentSubmissionContent, currentSchedulerId }: GraphExecutionOverlayProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   const context = useRuntimeSessionStore((state) => state.contextsByTabId[tabId]);
@@ -115,7 +116,7 @@ export function GraphExecutionOverlay({ tabId, onRun, currentSubmissionContent }
     [context],
   );
 
-  const runtimeView = getTabRuntimeView(tabId, currentSubmissionContent);
+  const runtimeView = getTabRuntimeView(tabId, currentSubmissionContent, currentSchedulerId);
   const isRunning = runtimeView.executionState === 'running';
   const operationMessage = toOperationMessage(runtimeView.operationState);
 

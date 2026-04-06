@@ -131,6 +131,29 @@ describe('graphTabsStore per-tab document state', () => {
     expect(second.snapshot.metadata.name.endsWith('.gr4s')).toBe(true);
   });
 
+  it('preserves scheduler metadata on tab snapshots', () => {
+    const snapshot: EditorSnapshot = {
+      metadata: {
+        name: 'Graph.gr4s',
+        description: undefined,
+        schedulerId: 'gr::scheduler::SimpleSingle',
+      },
+      nodes: [],
+      edges: [],
+    };
+
+    const created = useGraphTabsStore.getState().createTab({
+      snapshot,
+      document: {
+        ...createUntitledDocumentIdentity(fallbackCapabilities()),
+        displayName: 'Graph.gr4s',
+        lastPersistedContentHash: serializeEditorSnapshot(snapshot).contentHash,
+      },
+    });
+
+    expect(created.snapshot.metadata.schedulerId).toBe('gr::scheduler::SimpleSingle');
+  });
+
   it('does not let late initialization overwrite tabs created first', () => {
     const openedSnapshot = emptySnapshot('Opened.gr4s');
     const created = useGraphTabsStore.getState().createTab({

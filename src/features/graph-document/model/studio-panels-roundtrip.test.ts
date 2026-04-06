@@ -104,6 +104,23 @@ describe('studio panel metadata round-trip', () => {
     expect(restored.metadata.studioPanels).toEqual(snapshot.metadata.studioPanels);
   });
 
+  it('preserves scheduler ids between editor snapshot and graph document', () => {
+    const snapshot = {
+      metadata: {
+        name: 'Graph',
+        schedulerId: 'gr::scheduler::SimpleSingle',
+      },
+      nodes: [],
+      edges: [],
+    };
+
+    const document = graphDocumentFromEditor(snapshot);
+    expect(document.metadata.schedulerId).toBe('gr::scheduler::SimpleSingle');
+
+    const restored = editorGraphFromDocument(document);
+    expect(restored.metadata.schedulerId).toBe('gr::scheduler::SimpleSingle');
+  });
+
   it('preserves node execution modes between editor snapshot and graph document', () => {
     const snapshot = {
       metadata: {

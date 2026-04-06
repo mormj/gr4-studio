@@ -5,6 +5,7 @@ export const sessionDtoSchema = z
     id: z.string(),
     name: z.string(),
     state: z.string(),
+    scheduler_id: z.string().min(1).optional(),
     created_at: z.string(),
     updated_at: z.string(),
     last_error: z.string().nullable(),

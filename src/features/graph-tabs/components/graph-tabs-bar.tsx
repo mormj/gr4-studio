@@ -43,6 +43,14 @@ export function GraphTabsBar({
                 {tab.title}
                 {tab.isDirty ? ' *' : ''}
               </button>
+              {tab.snapshot.metadata.schedulerId && (
+                <span
+                  className="max-w-32 truncate rounded border border-cyan-700/60 bg-cyan-900/30 px-1.5 py-0.5 text-[10px] text-cyan-100"
+                  title={tab.snapshot.metadata.schedulerId}
+                >
+                  {tab.snapshot.metadata.schedulerId}
+                </span>
+              )}
               {linkedSession && (
                 <span
                   className="max-w-36 truncate rounded border border-slate-600 bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-200"

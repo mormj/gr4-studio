@@ -64,6 +64,10 @@ export default defineConfig(({ mode }) => {
           target: proxyTarget,
           changeOrigin: true,
         },
+        '/schedulers': {
+          target: proxyTarget,
+          changeOrigin: true,
+        },
         '/sessions': {
           target: proxyTarget,
           changeOrigin: true,

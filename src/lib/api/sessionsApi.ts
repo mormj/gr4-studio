@@ -14,6 +14,7 @@ export type SessionRecord = {
   id: string;
   name: string;
   state: SessionStateValue;
+  schedulerId?: string;
   createdAt: string;
   updatedAt: string;
   lastError: string | null;
@@ -22,6 +23,7 @@ export type SessionRecord = {
 export type CreateSessionInput = {
   name: string;
   grc: string;
+  scheduler_id?: string;
 };
 
 function parseOrThrow<T>(schema: z.ZodSchema<T>, payload: unknown, context: string): T {
@@ -47,6 +49,7 @@ function mapSession(dto: SessionDto): SessionRecord {
     id: dto.id,
     name: dto.name,
     state: normalizedState,
+    schedulerId: dto.scheduler_id ?? undefined,
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
     lastError: dto.last_error ?? null,
